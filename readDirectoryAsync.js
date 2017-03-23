@@ -1,13 +1,22 @@
 const fs = require("fs");
 
-function readDirSync(dirPath){
-    let files = fs.readdirSync(dirPath);
-    files.forEach((file) => {
-        let filePath = dirPath+"/"+file;
-        let stats = fs.statSync(filePath);
-        if(stats.isDirectory()){
-            files = files.concat(readDirSync(filePath));
-        }
+let readDir => (dirPath, cb){
+    fs.readdir(dirPath, (err, files) => {
+        var results = [];
+        var count = files.length;
+        files.forEach((file) => {
+            let filePath = dirPath+"/"+file;
+            fs.stat(filePath, (err, stats)=>{
+                if(stats.isDirectory()){
+                    readDir(filePath, (err, data) => {
+                        results = results.concat(data);
+                        if(!--count)cb(null, results);
+                    });
+                }else{
+                    results.push(file);
+                    if(!--count)cb(null, results);
+                }
+            });
+        });
     });
-    return files;
 }
